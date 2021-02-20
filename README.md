@@ -17,6 +17,11 @@
 ```
 
 
+
+##### Test
+* View the recording at:
+* https://asciinema.org/a/hOF0dHsgdv0foyvyJG5vUP2qn
+
 #####  感谢
 * 感谢以下老哥的工具。
 * https://github.com/TimothyYe/glance

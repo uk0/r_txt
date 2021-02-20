@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/html/charset"
 	"io/ioutil"
 	"net/http"
-	//"net/url"
+	"net/url"
 	"os"
 	"r_txt/lib"
 	"r_txt/xreader"
@@ -47,8 +47,8 @@ func SplitLines(s string) []string {
 }
 
 func nextPage(jumpPage string) string {
-	//proxyUrl, err := url.Parse("http://127.0.0.1:8148")
-	//http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+	proxyUrl, err := url.Parse("http://127.0.0.1:2087")
+	http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
 	resp, err := http.Get(fmt.Sprintf("%s%s", pageHost, jumpPage))
 	if err != nil {
 		fmt.Println(err)
