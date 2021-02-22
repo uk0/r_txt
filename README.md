@@ -25,3 +25,14 @@
 #####  感谢
 * 感谢以下老哥的工具。
 * https://github.com/TimothyYe/glance
+
+
+
+##### 猴子脚本
+
+* 0 `tools.js`
+* 1.添加油候
+* 2.修改目标网址
+* 3.找到一个内容 copy `jsPath`
+* 4 修改`jsPath`
+* 5 启动

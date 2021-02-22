@@ -29,6 +29,46 @@ type PageDataAndNextChapter struct {
 	CurrChapter string
 }
 
+
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "*")
+	(*w).Header().Set("Access-Control-Allow-Headers", "*")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
+// start server
+func start_server() {
+	http.HandleFunc("/nl", nextLine)
+	http.HandleFunc("/pl", prveLine)
+	http.HandleFunc("/np", nextOnePage)
+	http.ListenAndServe(":18311", nil)
+}
+
+// nextLine
+func nextLine(w http.ResponseWriter, rx *http.Request) {
+	enableCors(&w)
+	fmt.Fprintf(w, " %s!", r.Next())
+}
+
+
+func nextOnePage(w http.ResponseWriter, rx *http.Request) {
+	enableCors(&w)
+	pdc := getTxt(r.GetNextChapter())
+	savePos(pdc.CurrChapter)
+	r.Load(pdc.Data, pdc.NextChapter,pdc.CurrChapter)
+	fmt.Fprintf(w, " %s!", "下一章")
+}
+
+
+func prveLine(w http.ResponseWriter, rx *http.Request) {
+	enableCors(&w)
+	fmt.Fprintf(w, " %s!", r.Prev())
+}
+
+
+
 func convrtToUTF8(str string, origEncoding string) string {
 	strBytes := []byte(str)
 	byteReader := bytes.NewReader(strBytes)
@@ -73,12 +113,11 @@ func SplitSubWarpWidth(s string, n int) []string {
 		sub = sub + string(r)
 		if (i+1)%n == 0 {
 			subs = append(subs, sub)
-			sub = "\n"
+			sub = ""
 		} else if (i + 1) == l {
 			subs = append(subs, sub)
 		}
 	}
-
 	return subs
 }
 
@@ -118,11 +157,13 @@ func getTxt(jumpPage string) PageDataAndNextChapter {
 
 	txtBody := strings.Join(textDataArray[startIndex:endIndex], "")
 
-	textALLPageData := strings.Replace(txtBody, "<br/> ", "\n", -1)
-	textALLPageData = strings.Replace(textALLPageData, "<br/> ", "\r\n", -1)
-
+	textALLPageData := strings.Replace(txtBody, "<br/> ", "", -1)
+	// 去除空格
+	textALLPageData = strings.Replace(textALLPageData, " ", "", -1)
+	// 去除换行符
+	textALLPageData = strings.Replace(textALLPageData, "\n", "", -1)
 	//TerTxt:=SplitLines(strings.TrimSpace(textALLPageData))
-	TerTxt := SplitSubWarpWidth(strings.TrimSpace(textALLPageData), 35)
+	TerTxt := SplitSubWarpWidth(strings.TrimSpace(textALLPageData), 25)
 
 	re := regexp.MustCompile(`<a.+?href=\"(.+?)\".*>(.+)</a>`)
 	matches := re.FindStringSubmatch(textDataArray[nextPageIndex])
@@ -253,7 +294,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
+	go start_server();
 	Init(r)
 
 }

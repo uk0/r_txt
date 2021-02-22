@@ -99,8 +99,11 @@ func Init(gr xreader.XReader) {
 	width := fixedWidth
 
 	p = widgets.NewParagraph()
+	p.Border = true
+	p.BorderStyle.Fg=ui.ColorMagenta
+	p.BorderStyle.Bg=ui.ColorYellow
 	p.Text = r.Current()
-	p.SetRect(0, 0, width, 5)
+	p.SetRect(0, 0, width, 3)
 	p.TextStyle.Fg = ui.ColorWhite
 	p.BorderStyle.Fg = ui.ColorCyan
 	p.Border = showBorder
