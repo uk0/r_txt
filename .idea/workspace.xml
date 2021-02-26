@@ -2,12 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2686f254-f2af-4c71-baf6-dcc28e6563bf" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/tmjs/tools.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/r_txt" beforeDir="false" afterPath="$PROJECT_DIR$/r_txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui.go" beforeDir="false" afterPath="$PROJECT_DIR$/ui.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tmjs/tools.js" beforeDir="false" afterPath="$PROJECT_DIR$/tmjs/tools.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,7 +21,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" path="$PROJECT_DIR$/../../../go1.15.5" />
+  <component name="GOROOT" path="$USER_HOME$/.gvm/gos/go1.11" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -96,6 +95,10 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
+    <state x="747" y="537" key="#GOROOT" timestamp="1614075792633">
+      <screen x="0" y="0" width="1920" height="1200" />
+    </state>
+    <state x="747" y="537" key="#GOROOT/0.0.1920.1200@0.0.1920.1200" timestamp="1614075792633" />
     <state x="694" y="409" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1613994504268">
       <screen x="0" y="0" width="1920" height="1200" />
     </state>

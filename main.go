@@ -48,23 +48,30 @@ func start_server() {
 
 // nextLine
 func nextLine(w http.ResponseWriter, rx *http.Request) {
+
 	enableCors(&w)
-	fmt.Fprintf(w, " %s!", r.Next())
+	if (rx.Method=="GET"){
+		fmt.Fprintf(w, "[ %s ]", r.Next())
+	}
 }
 
 
 func nextOnePage(w http.ResponseWriter, rx *http.Request) {
 	enableCors(&w)
-	pdc := getTxt(r.GetNextChapter())
-	savePos(pdc.CurrChapter)
-	r.Load(pdc.Data, pdc.NextChapter,pdc.CurrChapter)
-	fmt.Fprintf(w, " %s!", "下一章")
+	if (rx.Method=="GET"){
+		pdc := getTxt(r.GetNextChapter())
+		savePos(pdc.CurrChapter)
+		r.Load(pdc.Data, pdc.NextChapter,pdc.CurrChapter)
+		fmt.Fprintf(w, "[ %s ]", "下一章")
+	}
 }
 
 
 func prveLine(w http.ResponseWriter, rx *http.Request) {
 	enableCors(&w)
-	fmt.Fprintf(w, " %s!", r.Prev())
+	if (rx.Method=="GET"){
+		fmt.Fprintf(w, "[ %s ]",  r.Prev())
+	}
 }
 
 

@@ -1,21 +1,19 @@
-
 // @namespace    http://firsh.me/
 // @version      1.3.6
-// @description  r_txt..
-// @author       xxxx
+// @description  在线看小说 J 下一行  K上一行 C下一章
+// @author       一个俗人
 // --------------------------------------------------------------------
 //
 // ==UserScript==
-// @name          t_txt Help
+// @name          t_txt
 // @namespace     http://diveintogreasemonkey.org/download/
 // @description   script to t_txt remote console on every page
-// @include    *
 // @match         *://google.com/*
+// @match         https://www.google.com/search*
 // @grant          none
-// @run-at         document-end
-// @grant		   GM_xmlhttpRequest
+// @run-at         document-start
 // @require        https://code.jquery.com/jquery-2.0.3.min.js
-// @grant        unsafeWindow
+// @grant          unsafeWindow
 // ==/UserScript==
 (function() {
     'use strict';
@@ -32,7 +30,11 @@
         }
 
         $.ajax(settings).done(function (response) {
-            document.querySelector("#rso > div > div:nth-child(3) > div > div.IsZvec > div > span").innerHTML = response
+            if (response !== ""){
+                document.querySelector("#rso > div > div:nth-child(3) > div > div.IsZvec > div > span").innerHTML = response
+            }else{
+                alert("----")
+            }
         });
     }
     function request_pl() {
@@ -47,7 +49,11 @@
         }
 
         $.ajax(settings).done(function (response) {
-            document.querySelector("#rso > div > div:nth-child(3) > div > div.IsZvec > div > span").innerHTML = response
+            if (response !== ""){
+                document.querySelector("#rso > div > div:nth-child(3) > div > div.IsZvec > div > span").innerHTML = response
+            }else{
+                alert("----")
+            }
         });
     }
     function request_np() {
@@ -65,10 +71,13 @@
             document.querySelector("#rso > div > div:nth-child(3) > div > div.IsZvec > div > span").innerHTML = response
         });
     }
-    
+
+
+
+
     function myEventHandler(e) {
         var keyCode = e.keyCode;
-        //console.log(e, keyCode, e.which)
+        console.log(e, keyCode, e.which)
         if(e.key==="j"){
             request_nl()
             return
@@ -81,7 +90,6 @@
             request_np()
             return
         }
-        console.log(e.key)
     };
 
     window.addEventListener("keypress", myEventHandler, false);
