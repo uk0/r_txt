@@ -1,7 +1,7 @@
 package xreader
 
 type XReader interface {
-	Load(path []string,nextChapter string,currentChapter string) error
+	Load(path []string,prevChapter string,nextChapter string,currentChapter string) error
 	Current() string
 	Next() string
 	Prev() string
@@ -10,7 +10,7 @@ type XReader interface {
 	CurrentPos() int
 	Goto(pos int) string
 	GetProgress() string
-	//GoNextChapter()
 	GetNextChapter()string
+	GetPrevChapter() string
 	GetCurrentChapter()string
 }

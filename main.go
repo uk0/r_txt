@@ -4,21 +4,25 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/axgle/mahonia"
 	ui "github.com/gizak/termui/v3"
 	"golang.org/x/net/html/charset"
+	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"r_txt/lib"
 	"r_txt/xreader"
-	"regexp"
 	"strings"
 	"time"
 )
 
 var (
-	pageHost = "http://www.boquku.com"
+	//pageHost = "https://wap.kanshu5.la"
+	pageHost = "https://m.51kanshu.cc"
 )
 
 var err error
@@ -26,10 +30,9 @@ var err error
 type PageDataAndNextChapter struct {
 	Data        []string
 	NextChapter string
+	PrevChapter string
 	CurrChapter string
 }
-
-
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -43,6 +46,7 @@ func start_server() {
 	http.HandleFunc("/nl", nextLine)
 	http.HandleFunc("/pl", prveLine)
 	http.HandleFunc("/np", nextOnePage)
+	http.HandleFunc("/up", prevOnePage)
 	http.ListenAndServe(":18311", nil)
 }
 
@@ -50,37 +54,44 @@ func start_server() {
 func nextLine(w http.ResponseWriter, rx *http.Request) {
 
 	enableCors(&w)
-	if (rx.Method=="GET"){
+	if rx.Method == "GET" {
 		fmt.Fprintf(w, "[ %s ]", r.Next())
 	}
 }
 
+func prevOnePage(w http.ResponseWriter, rx *http.Request) {
+	enableCors(&w)
+	if rx.Method == "GET" {
+		pdc := getTxt(r.GetPrevChapter())
+		savePos(pdc.CurrChapter)
+		r.Load(pdc.Data, pdc.PrevChapter, pdc.NextChapter, pdc.CurrChapter)
+		fmt.Fprintf(w, "[ %s ]", "上一章")
+	}
+}
 
 func nextOnePage(w http.ResponseWriter, rx *http.Request) {
 	enableCors(&w)
-	if (rx.Method=="GET"){
+	if rx.Method == "GET" {
 		pdc := getTxt(r.GetNextChapter())
 		savePos(pdc.CurrChapter)
-		r.Load(pdc.Data, pdc.NextChapter,pdc.CurrChapter)
+		r.Load(pdc.Data, pdc.PrevChapter, pdc.NextChapter, pdc.CurrChapter)
 		fmt.Fprintf(w, "[ %s ]", "下一章")
 	}
 }
 
-
 func prveLine(w http.ResponseWriter, rx *http.Request) {
 	enableCors(&w)
-	if (rx.Method=="GET"){
-		fmt.Fprintf(w, "[ %s ]",  r.Prev())
+	if rx.Method == "GET" {
+		fmt.Fprintf(w, "[ %s ]", r.Prev())
 	}
 }
-
-
 
 func convrtToUTF8(str string, origEncoding string) string {
 	strBytes := []byte(str)
 	byteReader := bytes.NewReader(strBytes)
 	reader, _ := charset.NewReaderLabel(origEncoding, byteReader)
 	strBytes, _ = ioutil.ReadAll(reader)
+	fmt.Println(string(strBytes))
 	return string(strBytes)
 }
 
@@ -93,20 +104,21 @@ func SplitLines(s string) []string {
 	return lines
 }
 
-func nextPage(jumpPage string) string {
-	proxyUrl, err := url.Parse("http://127.0.0.1:2087")
-	http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+func nextPage(jumpPage string) io.Reader {
+	if getUseProxy(pageHost) {
+		proxyUrl, _ := url.Parse("http://127.0.0.1:9998")
+		http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+	}
+
 	resp, err := http.Get(fmt.Sprintf("%s%s", pageHost, jumpPage))
 	if err != nil {
 		fmt.Println(err)
-		return "nil"
+		return nil
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode == 200 {
-		return convrtToUTF8(string(body), "gbk")
+		return resp.Body
 	}
-	return "nil"
+	return nil
 
 }
 
@@ -128,9 +140,65 @@ func SplitSubWarpWidth(s string, n int) []string {
 	return subs
 }
 
+func getContent(host string, doc *goquery.Document) string {
+	if strings.Contains(host, "biqugeu") || strings.Contains(host, "kanshu5") || strings.Contains(host, "51kanshu") {
+		return doc.Find("div#chaptercontent").Text()
+	}
+	return ""
+}
+
+func getUseProxy(host string) bool {
+	if strings.Contains(host, "biqugeu") {
+		return true
+	}
+	if strings.Contains(host, "kanshu5") || strings.Contains(host, "51kanshu") {
+		return false
+	}
+	return false
+}
+
+/**
+<a href="/73/73133/79540004.html" id="pt_prev" class="Readpage_up">上一页</a>
+<a href="/73/73133/79540004_3.html" id="pt_next" class="Readpage_down js_page_down">下一页</a>
+**/
+func getPageUp(host string, doc *goquery.Document) string {
+	if strings.Contains(host, "biqugeu") {
+		prevPageUrl, _ := doc.Find("a#pb_prev").Attr("href")
+		return prevPageUrl
+	}
+	if strings.Contains(host, "kanshu5") {
+		prevPageUrl, _ := doc.Find("a#pt_prev").Attr("href")
+		return prevPageUrl
+	}
+
+	if strings.Contains(host, "51kanshu") {
+		prevPageUrl, _ := doc.Find("a#pb_prev").Attr("href")
+		return prevPageUrl
+	}
+
+	return ""
+}
+func getPageDown(host string, doc *goquery.Document) string {
+	if strings.Contains(host, "biqugeu") {
+		nextPageUrl, _ := doc.Find("a#pb_next").Attr("href")
+		return nextPageUrl
+	}
+	if strings.Contains(host, "kanshu5") {
+		nextPageUrl, _ := doc.Find("a#pt_next").Attr("href")
+		return nextPageUrl
+	}
+
+	if strings.Contains(host, "51kanshu") {
+		nextPageUrl, _ := doc.Find("a#pb_next").Attr("href")
+		return nextPageUrl
+	}
+
+	return ""
+}
+
 func savePos(url string) {
-	//os.Mkdir("/tmp/r_txt/", 0777)
-	err := ioutil.WriteFile("/tmp/r_txt/pos", []byte(url), 0644)
+	os.Mkdir("tmp/", 0777)
+	err := ioutil.WriteFile("tmp/pos", []byte(url), 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -138,58 +206,40 @@ func savePos(url string) {
 
 func getTxt(jumpPage string) PageDataAndNextChapter {
 	txt := nextPage(jumpPage)
-	start := false
-	end := false
-	startIndex := 0
-	endIndex := 0
-	nextPageIndex := 0
-	textDataArray := SplitLines(txt)
-	for index, line := range textDataArray {
-		if strings.Contains(line, "<div id=\"txtContent\">") {
-			startIndex = index
-			start = true
-		}
-		if start && strings.Contains(line, "</div>") {
-			endIndex = index
-			end = true
-		}
 
-		if end && start {
-			if start && strings.Contains(line, "下一章") {
-				nextPageIndex = index
-				break
-			}
-		}
+	doc, err := goquery.NewDocumentFromReader(txt)
+	if err != nil {
+		log.Fatal(err)
 	}
+	var content string
+	content = getContent(pageHost, doc)
 
-	txtBody := strings.Join(textDataArray[startIndex:endIndex], "")
+	_ = ioutil.WriteFile("tmp/text_test.txt", []byte(content), 0777)
 
-	textALLPageData := strings.Replace(txtBody, "<br/> ", "", -1)
+	textALLPageData := strings.Replace(content, "<br/> ", "", -1)
 	// 去除空格
 	textALLPageData = strings.Replace(textALLPageData, " ", "", -1)
 	// 去除换行符
 	textALLPageData = strings.Replace(textALLPageData, "\n", "", -1)
-	//TerTxt:=SplitLines(strings.TrimSpace(textALLPageData))
+
+	decoder := mahonia.NewDecoder(CheckCharSet(pageHost))
+	textALLPageData = decoder.ConvertString(textALLPageData)
 	TerTxt := SplitSubWarpWidth(strings.TrimSpace(textALLPageData), 25)
 
-	re := regexp.MustCompile(`<a.+?href=\"(.+?)\".*>(.+)</a>`)
-	matches := re.FindStringSubmatch(textDataArray[nextPageIndex])
-	nextPageUrl := matches[1]
-	//fmt.Println(nextPageUrl)
+	nextPageUrl := getPageDown(pageHost, doc)
+	prevPageUrl := getPageUp(pageHost, doc)
 
-	//fmt.Println(len(strings.Split(txt,"<br/>")))
-	//fmt.Println(strings.Index(txt, "下一章"))
-	return PageDataAndNextChapter{TerTxt, nextPageUrl,jumpPage}
+	return PageDataAndNextChapter{TerTxt, nextPageUrl, prevPageUrl, jumpPage}
 }
 
+func CheckCharSet(host string) string {
+	if strings.Contains(host, "biqugeu") {
+		return "GBK"
+	}
+	return "UTF-8"
+}
 func handleEvents() {
-	// http://www.boquku.com/book/4622/3084968.html
 
-	//<div id="txtContent"> count = 1
-
-	//  </div> count = 1
-
-	// 下一章 <a href="/book/4622/3084969.html">下一章</a><span class="red">（快捷键:→）</span>
 	uiEvents := ui.PollEvents()
 	defer ui.Close()
 	for {
@@ -215,7 +265,7 @@ func handleEvents() {
 		case "c":
 			pdc := getTxt(r.GetNextChapter())
 			savePos(pdc.CurrChapter)
-			r.Load(pdc.Data, pdc.NextChapter,pdc.CurrChapter)
+			r.Load(pdc.Data, pdc.PrevChapter, pdc.NextChapter, pdc.CurrChapter)
 		case "j", "<Space>", "<Enter>":
 			if rowNumber == "" {
 				// show the next content
@@ -285,7 +335,7 @@ func main() {
 	if len(os.Args) == 1 || len(os.Args) > 2 {
 		fmt.Println("Use Config File || Modify Please input the Url")
 		//os.Exit(1)
-		tmp, _ := ioutil.ReadFile("/tmp/r_txt/pos")
+		tmp, _ := ioutil.ReadFile("tmp/pos")
 		urlPath = string(tmp)
 	} else {
 		urlPath = os.Args[1]
@@ -294,14 +344,12 @@ func main() {
 
 	r = xreader.XReader(xreader.NewTxtReader())
 
-	///book/4622/3084968.html
-
 	pdc := getTxt(urlPath)
-	if err := r.Load(pdc.Data, pdc.NextChapter,urlPath); err != nil {
+	if err := r.Load(pdc.Data, pdc.PrevChapter, pdc.NextChapter, urlPath); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	go start_server();
+	go start_server()
 	Init(r)
 
 }

@@ -8,6 +8,7 @@ type TxtReader struct {
 	content []string
 	pos     int
 	nextChapter string
+	prevChapter string
 	currentChapter string
 }
 
@@ -15,9 +16,10 @@ func NewTxtReader() *TxtReader {
 	return &TxtReader{}
 }
 
-func (txt *TxtReader) Load(string2 []string,nextChapter string,currentChapter string) error {
+func (txt *TxtReader) Load(string2 []string,prevChapter string,nextChapter string,currentChapter string) error {
 	txt.content = string2
 	txt.nextChapter = nextChapter
+	txt.prevChapter = prevChapter
 	txt.currentChapter = currentChapter
 	txt.pos = 0
 	return nil
@@ -26,6 +28,12 @@ func (txt *TxtReader) Load(string2 []string,nextChapter string,currentChapter st
 func (txt *TxtReader)GetNextChapter()string {
 	return txt.nextChapter;
 }
+
+
+func (txt *TxtReader)GetPrevChapter()string {
+	return txt.prevChapter;
+}
+
 
 func (txt *TxtReader)GetCurrentChapter()string  {
 	return txt.currentChapter;
@@ -45,7 +53,7 @@ func (txt *TxtReader) Next() string {
 		txt.pos = len(txt.content) - 1
 	}
 
-	return "END"
+	return "END Line"
 }
 
 func (txt *TxtReader) Prev() string {
